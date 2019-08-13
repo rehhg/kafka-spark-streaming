@@ -63,13 +63,13 @@ def process(time, rdd):
                 .format('jdbc')\
                 .mode('append')\
                 .option('driver', 'org.postgresql.Driver')\
-                .option('url', 'amazon...')\
-                .option('dbtable', 'transactio_flow')\
+                .option('url', 'foo.bar')\
+                .option('dbtable', 'transaction_flow')\
                 .option('user', 'foo')\
                 .option('password', 'bar')\
                 .save()
         except Exception as e:
-            print('--> Opps! Error: {}'.format(e))
+            print('--> Opps! Error in writing to database: {}'.format(e))
 
     except Exception as e:
         print('--> Opps! Error: {}'.format(e))
