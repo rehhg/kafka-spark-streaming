@@ -2,7 +2,6 @@ from time import sleep
 from json import dumps
 from numpy.random import choice, randint
 from kafka import KafkaProducer
-from kafka.errors import KafkaError
 
 
 def get_random_value():
@@ -41,5 +40,3 @@ if __name__ == '__main__':
                 producer.flush()
 
         sleep(1)
-
-    producer.close()

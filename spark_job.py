@@ -4,13 +4,16 @@ import os
 import sys
 import shutil
 import json
+import yaml
 
-from pyspark import SparkContext, SparkConf
+from pyspark import SparkContext
 from pyspark.streaming import StreamingContext
 from pyspark.sql import Row, SparkSession
 from pyspark.streaming.kafka import KafkaUtils
 
 OUTPUT_PATH = '/tmp/spark/checkpoint_01'
+
+SPARK_SESSION_SINGLETON = 'sparkSessionSingletonInstance'
 
 
 def get_sql_query():
@@ -25,15 +28,31 @@ def get_sql_query():
         print('--> Opps! Can\'t open the sql file')
 
 
+def get_credentials():
+    class Credentials:
+        def __init__(self):
+            self.username = None
+            self.password = None
+            self.db_url = None
+
+    creds = yaml.load(open('credentials.yaml'))
+
+    result = Credentials()
+    result.username = creds['credentials']['username']
+    result.password = creds['credentials']['password']
+    result.db_url = creds['credentials']['db_url']
+    return result
+
+
 def get_spark_session_instance(spark_conf):
     """
     Lazily instantiated global instance of SparkSession
     :param spark_conf: spark configuration
     :return: SparkSession
     """
-    if 'sparkSessionSingletonInstance' not in globals():
-        globals()['sparkSessionSingletonInstance'] = SparkSession.builder.config(conf=spark_conf).getOrCreate()
-    return globals()['sparkSessionSingletonInstance']
+    if SPARK_SESSION_SINGLETON not in globals():
+        globals()[SPARK_SESSION_SINGLETON] = SparkSession.builder.config(conf=spark_conf).getOrCreate()
+    return globals()[SPARK_SESSION_SINGLETON]
 
 
 def process(time, rdd):
@@ -46,6 +65,7 @@ def process(time, rdd):
     print('==============----> %s <----===============' % str(time))
 
     try:
+        credentials = get_credentials()
         spark = get_spark_session_instance(rdd.context.getConf())
 
         row_rdd = rdd.map(lambda w: Row(city=w['city'], currency=w['currency'], amount=w['amount']))
@@ -63,16 +83,16 @@ def process(time, rdd):
                 .format('jdbc')\
                 .mode('append')\
                 .option('driver', 'org.postgresql.Driver')\
-                .option('url', 'foo.bar')\
+                .option('url', credentials.db_url)\
                 .option('dbtable', 'transaction_flow')\
-                .option('user', 'foo')\
-                .option('password', 'bar')\
+                .option('user', credentials.username)\
+                .option('password', credentials.password)\
                 .save()
         except Exception as e:
             print('--> Opps! Error in writing to database: {}'.format(e))
 
     except Exception as e:
-        print('--> Opps! Error: {}'.format(e))
+        print('--> Opps! Error in process: {}'.format(e))
 
 
 def create_context():
