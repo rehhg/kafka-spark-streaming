@@ -1,5 +1,13 @@
 # Example of usage Spark Streaming with Apache Kafka
 
+##### 1) First you need to create credentials.yaml file with structure:
+    credentials:
+        username: foo
+        password: bar
+        db_url: (url to your psotgresql database on the cloud)
+
+##### 2) Then install Spark and Kafka
+
 #### Execution:
 
 ```console
