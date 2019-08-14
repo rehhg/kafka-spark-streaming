@@ -1,5 +1,7 @@
 # Example of usage Spark Streaming with Apache Kafka
 
+#### Spark streaming handles message flows from Apache Kafka and saves it to AWS RDS PostgreSQL
+
 ##### 1) First you need to create credentials.yaml file with structure:
     credentials:
         username: foo
